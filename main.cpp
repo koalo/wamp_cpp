@@ -3,10 +3,8 @@
 
 int main()
 {
+  Example g;
+
   Server server;
   server.start();
-
-  Example g;
-  g.run("Hallo");
-  g.run("Hallo");
 }

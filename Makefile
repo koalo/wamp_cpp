@@ -1,7 +1,13 @@
 LDLIBS+=-ljsoncpp -lboost_system
-CXXFLAGS+=-std=c++0x -Iwebsocketpp -Iboost_1_53_0 -Lboostbuild/lib/
+BOOSTROOT=boost
+WEBSOCKETPPROOT=websocketpp
 
-main: main.o Example.o RPCallable.o Server.o MessageHandler.o
+CXXFLAGS+=-std=c++0x -I$(WEBSOCKETPPROOT) -I$(BOOSTROOT)/include/ -L$(BOOSTROOT)/lib/
+
+main: main.o Example.o Server.o MessageHandler.o Directory.o Json.o
 
 run: main
-	LD_LIBRARY_PATH=boostbuild/lib/ ./main
+	LD_LIBRARY_PATH=$(BOOSTROOT)/lib/ ./main
+
+clean:
+	rm *.o main

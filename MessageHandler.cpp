@@ -1,4 +1,5 @@
 #include "MessageHandler.h"
+#include "Directory.h"
 
 using namespace std;
 
@@ -16,7 +17,20 @@ void MessageHandler::sendCallResult(string callID, Json::Value result)
 
 void MessageHandler::handleCall(string callID, string uri, vector<Json::Value> values)
 {
-	  sendCallResult(callID,values[0]);
+	RemoteProcedure rp = Directory::getInstance().get(uri);
+	Json::Value result;
+
+	if(rp)
+	{
+		// TODO what if values does not match??
+		// TODO future!!
+		result = rp(values);
+		sendCallResult(callID,result);
+	}
+	else
+	{
+		// send error!
+	}
 }
 
 void MessageHandler::receiveMessage(std::string msg)

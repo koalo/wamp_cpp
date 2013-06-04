@@ -3,16 +3,11 @@
 
 #include <functional>
 #include <iostream>
-#include <jsoncpp/json/value.h>
-#include <jsoncpp/json/reader.h>
 #include <sstream>
 #include <map>
 
-template<class T>
-T convertJson(Json::Value& val)
-{
-	return T();
-}
+#include "Json.h"
+#include "Directory.h"
 
 class RPCallable
 {
@@ -44,14 +39,16 @@ public:
 	template<class G, class T>
 	void add(std::string uri, T&& t)
 	{
-	  callbacks[uri] = conv(static_cast<std::function<G>>(t));
+		Directory::getInstance().insert(uri, conv(static_cast<std::function<G>>(t)));
 	}
 
+	/*
 	void run(std::string uri)
 	{
 		std::vector<Json::Value> v;
 		callbacks[uri](v);
 	}
+	*/
 };
 
 #endif

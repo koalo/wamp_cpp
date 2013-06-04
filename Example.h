@@ -4,5 +4,5 @@ class Example : public RPCallable
 {
 public:
   Example();
-  int test(int a);
+  int adding(int a, int b);
 };

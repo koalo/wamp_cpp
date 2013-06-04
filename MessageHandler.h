@@ -2,10 +2,9 @@
 #define MESSAGEHANDLER_H_
 #include <iostream>
 #include <sstream>
-#include <jsoncpp/json/value.h>
-#include <jsoncpp/json/reader.h>
-#include <jsoncpp/json/writer.h>
 #include <functional>
+
+#include "Json.h"
 
 class MessageHandler
 {

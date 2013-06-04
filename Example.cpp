@@ -5,12 +5,11 @@ using namespace std;
 
 Example::Example()
 {
-  add<void(Example*,int)>("Hallo",&Example::test);
+  add<int(Example*,int,int)>("http://example.com/simple/calc#add",&Example::adding);
 }
 
-int Example::test(int a)
+int Example::adding(int a, int b)
 {
-  cout << "Guten Tag" << endl;
-  return a*3;
+  return a+b;
 }
 
