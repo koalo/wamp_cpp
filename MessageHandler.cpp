@@ -1,7 +1,9 @@
 #include "MessageHandler.h"
 #include "Directory.h"
+#include "EventManager.h"
 
 using namespace std;
+using namespace std::placeholders;
 
 void MessageHandler::sendCallResult(string callID, Json::Value result)
 {
@@ -14,6 +16,8 @@ void MessageHandler::sendCallResult(string callID, Json::Value result)
 	  sendFun(output.str());
 	}
 }
+
+
 
 void MessageHandler::handleCall(string callID, string uri, vector<Json::Value> values)
 {
@@ -31,6 +35,25 @@ void MessageHandler::handleCall(string callID, string uri, vector<Json::Value> v
 	{
 		// send error!
 	}
+}
+
+void MessageHandler::sendEvent(string uri, Json::Value payload)
+{
+	Json::FastWriter writer;
+	stringstream output;
+	output << "[" << EVENT << ",\"" << uri << "\"," << writer.write(payload) << "]";
+
+	if(sendFun)
+	{
+	  sendFun(output.str());
+	}
+}
+
+void MessageHandler::subscribe(string uri)
+{
+  auto eventHandler = bind(&MessageHandler::sendEvent,this,_1,_2); 
+  //EventManager::getInstance().subscribe(uri,static_cast<EventHandler>(eventHandler));
+  EventManager::getInstance().subscribe(uri,eventHandler);
 }
 
 void MessageHandler::receiveMessage(std::string msg)
@@ -69,6 +92,14 @@ void MessageHandler::receiveMessage(std::string msg)
 
 		handleCall(root[1].asString(),root[2].asString(),values);
 		break;
+	case SUBSCRIBE:
+		if(root.size() < 2)
+		{
+		  cerr << "Too few elements in message for SUBSCRIBE" << endl;
+		}
+		
+		subscribe(root[1].asString());
+
 	default:
 		cerr << "Not implemented" << endl;
 	}
@@ -78,3 +109,4 @@ void MessageHandler::registerSend(function<void(std::string)> send)
 {
   sendFun = send; 
 }
+

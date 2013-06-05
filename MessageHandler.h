@@ -24,6 +24,8 @@ public:
 
   void sendCallResult(std::string callID, Json::Value result);
   void handleCall(std::string callID, std::string uri, std::vector<Json::Value> values);
+  void sendEvent(std::string uri, Json::Value payload);
+  void subscribe(std::string uri);
   void receiveMessage(std::string msg);
   void registerSend(std::function<void(std::string)> send);
 
