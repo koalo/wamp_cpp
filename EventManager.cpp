@@ -21,6 +21,7 @@ bool FunctionComparator::operator()(const EventHandler& a, const EventHandler& b
 
 void EventManager::subscribe(string uri, EventHandler handler)
 {
+    	unique_lock<mutex> l(subscriptionsLock);
 	subscriptions[uri].insert(handler);
 }
 
@@ -32,9 +33,9 @@ EventManager& EventManager::getInstance()
 	
 void EventManager::publish(std::string uri, Json::Value payload)
 {
-	// TODO locking
+    	unique_lock<mutex> l(subscriptionsLock);
 	auto ehSet = subscriptions.find(uri);
-	
+
 	// has someone subscribed to this event?
 	if(ehSet != subscriptions.end())
 	{
@@ -47,14 +48,14 @@ void EventManager::publish(std::string uri, Json::Value payload)
 
 void EventManager::pushTopic(AbstractTopic* topic)
 {
-    	unique_lock<mutex> l(lock);
+    	unique_lock<mutex> l(pendingTopicsLock);
 	pendingTopics.push(topic);
-	notEmpty.notify_one();
+	pendingTopicsNotEmpty.notify_one();
 }
 
 void EventManager::eventLoop()
 {
-    	unique_lock<mutex> l(lock);
+    	unique_lock<mutex> l(pendingTopicsLock);
 
 	while(running)
 	{
@@ -71,7 +72,7 @@ void EventManager::eventLoop()
 			l.lock();
 		}
 
-    		notEmpty.wait_for(l, chrono::milliseconds(500));
+    		pendingTopicsNotEmpty.wait_for(l, chrono::milliseconds(500));
 	}
 }
 

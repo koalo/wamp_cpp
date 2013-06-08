@@ -39,12 +39,15 @@ private:
 	~EventManager();
 	void eventLoop();
 
-	std::map<std::string, std::set<EventHandler,FunctionComparator>> subscriptions;
-	std::queue<AbstractTopic*> pendingTopics;
 	bool running;
 	std::thread eventThread;
-	std::mutex lock;
-  	std::condition_variable notEmpty;
+
+	std::map<std::string, std::set<EventHandler,FunctionComparator>> subscriptions;
+	std::mutex subscriptionsLock;
+
+	std::queue<AbstractTopic*> pendingTopics;
+	std::mutex pendingTopicsLock;
+  	std::condition_variable pendingTopicsNotEmpty;
 };
 
 #endif
