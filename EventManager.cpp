@@ -4,6 +4,14 @@ using namespace std;
 
 EventManager::EventManager()
 {
+	running = true;
+	eventThread = std::thread(&EventManager::eventLoop,this);
+}
+
+EventManager::~EventManager()
+{
+	running = false;
+	eventThread.join();
 }
 
 bool FunctionComparator::operator()(const EventHandler& a, const EventHandler& b) const
@@ -22,8 +30,9 @@ EventManager& EventManager::getInstance()
 	return eventManager;
 }
 	
-void EventManager::event(std::string uri, Json::Value payload)
+void EventManager::publish(std::string uri, Json::Value payload)
 {
+	// TODO locking
 	auto ehSet = subscriptions.find(uri);
 	
 	// has someone subscribed to this event?
@@ -33,6 +42,36 @@ void EventManager::event(std::string uri, Json::Value payload)
 		{
 			eh(uri,payload);
 		}
+	}
+}
+
+void EventManager::pushTopic(AbstractTopic* topic)
+{
+    	unique_lock<mutex> l(lock);
+	pendingTopics.push(topic);
+	notEmpty.notify_one();
+}
+
+void EventManager::eventLoop()
+{
+    	unique_lock<mutex> l(lock);
+
+	while(running)
+	{
+		while(!pendingTopics.empty())
+		{
+			AbstractTopic* topic = pendingTopics.front();
+			pendingTopics.pop();
+			l.unlock();
+
+			string uri = topic->getURI();
+			cout << uri << endl;
+			Json::Value payload = topic->getPayload();
+			publish(uri,payload);
+			l.lock();
+		}
+
+    		notEmpty.wait_for(l, chrono::milliseconds(500));
 	}
 }
 

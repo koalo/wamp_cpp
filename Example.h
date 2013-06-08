@@ -1,5 +1,6 @@
 #include "RPCallable.h"
 #include <thread>
+#include "Topic.h"
 
 class Example : public RPCallable
 {
@@ -11,4 +12,6 @@ public:
 private:
   void eventLoop();
   std::thread eventThread;
+
+  Topic<int> topic;
 };

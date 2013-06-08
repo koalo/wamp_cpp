@@ -6,6 +6,9 @@
 #include <set>
 #include <functional>
 #include "Json.h"
+#include <queue>
+#include <thread>
+#include "Topic.h"
 
 typedef std::function<void(std::string,Json::Value)> EventHandler;
 
@@ -21,17 +24,27 @@ public:
 	void subscribe(std::string uri, EventHandler handler);
 	static EventManager& getInstance();
 
-	void event(std::string uri, Json::Value payload);
+	void publish(std::string uri, Json::Value payload);
 
 	template<typename T>
-	void event(std::string uri, T payload)
+	void publish(std::string uri, T payload)
 	{
-		event(uri,Json::Value(payload));	
+		publish(uri,Json::Value(payload));	
 	}
+
+	void pushTopic(AbstractTopic* topic);
 
 private:
 	EventManager();
+	~EventManager();
+	void eventLoop();
+
 	std::map<std::string, std::set<EventHandler,FunctionComparator>> subscriptions;
+	std::queue<AbstractTopic*> pendingTopics;
+	bool running;
+	std::thread eventThread;
+	std::mutex lock;
+  	std::condition_variable notEmpty;
 };
 
 #endif
