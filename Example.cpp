@@ -27,7 +27,7 @@ void Example::eventLoop()
 	{
 		this_thread::sleep_for(chrono::seconds(5));
 
-		EventManager::getInstance().publish("http://example.com/simple/ev2#test", 55);
+		EventManager::getInstance().publish("http://example.com/simple/ev2", 55);
 
 		topic.update(12);	
 	}

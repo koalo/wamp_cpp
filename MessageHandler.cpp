@@ -42,7 +42,6 @@ void MessageHandler::sendEvent(string uri, Json::Value payload)
 	Json::FastWriter writer;
 	stringstream output;
 	output << "[" << EVENT << ",\"" << uri << "\"," << writer.write(payload) << "]";
-	cout << output << endl;
 
 	if(sendFun)
 	{

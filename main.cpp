@@ -1,10 +1,11 @@
 #include "Example.h"
-#include "Server.h"
+#include "WAMPServer.h"
 
 int main()
 {
   Example g;
 
-  Server server;
+  // TODO rename
+  WAMPServer server;
   server.start();
 }

@@ -2,13 +2,15 @@
 
 #include <iostream>
 
-#include "Server.h"
+#include "WAMPServer.h"
 
 
-	void Server::on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
+	void WAMPServer::on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
+		/*
 		std::cout << "on_message called with hdl: " << hdl.lock().get() 
 			<< " and message: " << msg->get_payload()
 			<< std::endl;
+			*/
 
 		handler.receiveMessage(msg->get_payload());
 
@@ -20,7 +22,7 @@
 		}
 	}
 
-	bool Server::validate(connection_hdl hdl) {
+	bool WAMPServer::validate(connection_hdl hdl) {
 		server::connection_ptr con = wserver.get_con_from_hdl(hdl);
 
 		std::cout << "Cache-Control: " << con->get_request_header("Cache-Control") << std::endl;
@@ -39,7 +41,7 @@
 		return true;
 	}
 
-	void Server::on_open(connection_hdl hdl) {
+	void WAMPServer::on_open(connection_hdl hdl) {
 
 		connections.insert(hdl);
 		try {
@@ -50,11 +52,11 @@
 		}
 	}
 
-	void Server::on_close(connection_hdl hdl) {
+	void WAMPServer::on_close(connection_hdl hdl) {
 		connections.erase(hdl);
 	}
 
-	void Server::send(std::string msg)
+	void WAMPServer::send(std::string msg)
 	{
 		try {
 			// TODO connections?
@@ -68,23 +70,34 @@
 		}
 	}
 
-	void Server::start()
+	void WAMPServer::start()
 	{
-		handler.registerSend(bind(&Server::send,this,::_1));
+		serverThread = std::thread(&WAMPServer::thread,this);
+	}
+
+	void WAMPServer::stop()
+	{
+		wserver.stop();
+		serverThread.join();
+	}
+
+	void WAMPServer::thread()
+	{
+		handler.registerSend(bind(&WAMPServer::send,this,::_1));
 
 		try {
 			// Set logging settings
-			wserver.set_access_channels(websocketpp::log::alevel::all);
-			wserver.clear_access_channels(websocketpp::log::alevel::frame_payload);
+			//wserver.set_access_channels(websocketpp::log::alevel::all);
+			wserver.clear_access_channels(websocketpp::log::alevel::all);
 
 			// Initialize ASIO
 			wserver.init_asio();
 
 			// Register our message handler
-			wserver.set_message_handler(bind(&Server::on_message,this,::_1,::_2));
-			wserver.set_validate_handler(bind(&Server::validate,this,::_1));
-			wserver.set_open_handler(bind(&Server::on_open,this,::_1));
-			wserver.set_close_handler(bind(&Server::on_close,this,::_1));
+			wserver.set_message_handler(bind(&WAMPServer::on_message,this,::_1,::_2));
+			wserver.set_validate_handler(bind(&WAMPServer::validate,this,::_1));
+			wserver.set_open_handler(bind(&WAMPServer::on_open,this,::_1));
+			wserver.set_close_handler(bind(&WAMPServer::on_close,this,::_1));
 
 			// Listen on port 9002
 			wserver.listen(9002);

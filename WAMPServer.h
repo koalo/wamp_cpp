@@ -1,5 +1,5 @@
-#ifndef SERVER_H_
-#define SERVER_H_
+#ifndef WAMPSERVER_H_
+#define WAMPSERVER_H_
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
 
@@ -17,7 +17,7 @@ using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
 using websocketpp::connection_hdl;
 
-class Server {
+class WAMPServer {
 public:
 	typedef websocketpp::server<websocketpp::config::asio> server;
 
@@ -40,6 +40,11 @@ public:
 	void on_close(connection_hdl hdl);
 	void send(std::string msg);
 	void start();
+	void stop();
+
+private:
+	void thread();
+	std::thread serverThread;
 };
 
 #endif

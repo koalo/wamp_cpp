@@ -66,7 +66,6 @@ void EventManager::eventLoop()
 			l.unlock();
 
 			string uri = topic->getURI();
-			cout << uri << endl;
 			Json::Value payload = topic->getPayload();
 			publish(uri,payload);
 			l.lock();
