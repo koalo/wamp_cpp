@@ -3,6 +3,8 @@
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
 
+#include <boost/bimap.hpp>
+
 #include "MessageHandler.h"
 
 #include <set>
@@ -27,24 +29,24 @@ public:
 	//typedef std::set<connection_hdl,std::owner_less<connection_hdl>> con_list;
 	typedef std::set<connection_hdl> con_list;
 
-	server wserver;
-
-	con_list connections;
-
-	MessageHandler handler;
-
 	// Define a callback to handle incoming messages
 	void on_message(websocketpp::connection_hdl hdl, message_ptr msg);
 	bool validate(connection_hdl hdl);
 	void on_open(connection_hdl hdl);
 	void on_close(connection_hdl hdl);
-	void send(std::string msg);
+	void send(std::string client, std::string msg);
 	void start();
 	void stop();
 
 private:
 	void thread();
+	static std::string generateRandomString();
 	std::thread serverThread;
+
+	server wserver;
+	con_list connections;
+	MessageHandler handler;
+	boost::bimap<std::string, connection_hdl> clients;
 };
 
 #endif

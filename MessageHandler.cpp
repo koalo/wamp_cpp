@@ -5,7 +5,7 @@
 using namespace std;
 using namespace std::placeholders;
 
-void MessageHandler::sendCallResult(string callID, Json::Value result)
+void MessageHandler::sendCallResult(string client, string callID, Json::Value result)
 {
 	Json::FastWriter writer;
 	stringstream output;
@@ -13,31 +13,37 @@ void MessageHandler::sendCallResult(string callID, Json::Value result)
 
 	if(sendFun)
 	{
-	  sendFun(output.str());
+	  sendFun(client,output.str());
 	}
 }
 
 
 
-void MessageHandler::handleCall(string callID, string uri, vector<Json::Value> values)
+void MessageHandler::handleCall(string client, string callID, string uri, vector<Json::Value> values)
 {
-	RemoteProcedure rp = Directory::getInstance().get(uri);
-	Json::Value result;
+// TODO is this against the standard? Probably!
+	auto range = Directory::getInstance().equal_range(uri);
+	for(auto it = range.first; it != range.second; it++)
+	{
+		Json::Value result;
 
-	if(rp)
-	{
-		// TODO what if values does not match??
-		// TODO future!!
-		result = rp(values);
-		sendCallResult(callID,result);
-	}
-	else
-	{
-		// send error!
+		RemoteProcedure& rp = it->second;
+
+		if(rp)
+		{
+			// TODO what if values does not match??
+			// TODO future!!
+			result = rp(values);
+			sendCallResult(client,callID,result);
+		}
+		else
+		{
+			// send error!
+		}
 	}
 }
 
-void MessageHandler::sendEvent(string uri, Json::Value payload)
+void MessageHandler::sendEvent(string client, string uri, Json::Value payload)
 {
 	Json::FastWriter writer;
 	stringstream output;
@@ -45,18 +51,18 @@ void MessageHandler::sendEvent(string uri, Json::Value payload)
 
 	if(sendFun)
 	{
-	  sendFun(output.str());
+	  sendFun(client,output.str());
 	}
 }
 
-void MessageHandler::subscribe(string uri)
+void MessageHandler::subscribe(string client, string uri)
 {
-  auto eventHandler = bind(&MessageHandler::sendEvent,this,_1,_2); 
+  auto eventHandler = bind(&MessageHandler::sendEvent,this,_1,_2,_3); 
   //EventManager::getInstance().subscribe(uri,static_cast<EventHandler>(eventHandler));
-  EventManager::getInstance().subscribe(uri,eventHandler);
+  EventManager::getInstance().subscribe(client,uri,eventHandler);
 }
 
-void MessageHandler::receiveMessage(std::string msg)
+void MessageHandler::receiveMessage(std::string client, std::string msg)
 {
 	Json::Value root;   // will contains the root value after parsing.
 	Json::Reader reader;
@@ -66,18 +72,18 @@ void MessageHandler::receiveMessage(std::string msg)
 	if ( !parsingSuccessful )
 	{
 		std::cout  << "Failed to parse configuration\n"
-			<< reader.getFormattedErrorMessages();
+			<< reader.getFormatedErrorMessages();
 		return;
 	}
 
-	if(root.size() < 1 || !root[0].isInt())
+	if(root.size() < 1 || !root[(unsigned int)0].isInt())
 	{
 		cerr << "Wrong message format" << endl;
 	}
 	
 	vector<Json::Value> values;
 
-	switch(root[0].asInt())
+	switch(root[(unsigned int)0].asInt())
 	{
 	case CALL:
 		if(root.size() < 3)
@@ -85,27 +91,45 @@ void MessageHandler::receiveMessage(std::string msg)
 		  cerr << "Too few elements in message for CALL" << endl;
 		}
 
-		for(int i = 3; i < root.size(); i++)
+		for(unsigned int i = 3; i < root.size(); i++)
 		{
 			values.push_back(root[i]);
 		}
 
-		handleCall(root[1].asString(),root[2].asString(),values);
+		handleCall(client,root[1].asString(),root[2].asString(),values);
 		break;
+
 	case SUBSCRIBE:
 		if(root.size() < 2)
 		{
 		  cerr << "Too few elements in message for SUBSCRIBE" << endl;
 		}
 		
-		subscribe(root[1].asString());
+		subscribe(client, root[1].asString());
+		break;
+
+	case PUBLISH:
+		switch(root.size())
+		{
+		case 3:
+			EventManager::getInstance().publish(root[1].asString(),root[2],"");
+			break;
+		case 4:
+		case 5:
+			EventManager::getInstance().publish(root[1].asString(),root[2],root[3].asBool()?client:"");
+			break;
+		default:
+		  	cerr << "Wrong format for PUBLISH" << endl;
+			
+		};
+		break;
 
 	default:
-		cerr << "Not implemented" << endl;
+		cerr << "Message type " << root[(unsigned int)0].asInt() << "  not implemented"  << endl;
 	}
 }
 
-void MessageHandler::registerSend(function<void(std::string)> send)
+void MessageHandler::registerSend(function<void(std::string,std::string)> send)
 {
   sendFun = send; 
 }

@@ -4,6 +4,7 @@
 #include <string>
 #include "Json.h"
 #include <thread>
+#include <mutex>
 
 class AbstractTopic
 {

@@ -4,22 +4,6 @@
 
 using namespace std;
 
-Directory::Directory()
-{
-}
-
-void Directory::insert(std::string uri, RemoteProcedure rp)
-{
-	// TODO
-  directory[uri] = rp;
-}
-
-RemoteProcedure Directory::get(std::string uri)
-{
-	// TODO
-  return directory[uri];
-}
-
 Directory& Directory::getInstance()
 {
   // instance is static - it lives forever
@@ -27,3 +11,35 @@ Directory& Directory::getInstance()
   return instance;
 }
 
+Directory::Directory()
+{
+}
+
+void Directory::insert(std::string uri, RemoteProcedure rp)
+{
+	// TODO
+  directory.insert(make_pair(uri, rp));
+}
+
+std::pair< std::multimap<std::string,RemoteProcedure>::iterator,
+	       std::multimap<std::string,RemoteProcedure>::iterator> Directory::equal_range(std::string uri)
+{
+	// TODO
+	return directory.equal_range(uri);
+}
+
+void Directory::addConnectionHandler(std::function<void(std::string)> handler)
+{
+  connectionHandlers.push_back(handler);
+}
+
+void Directory::connectionEstablished(std::string client)
+{
+  for(auto handler : connectionHandlers)
+  {
+    if(handler)
+    {
+      handler(client);
+    }
+  }
+}

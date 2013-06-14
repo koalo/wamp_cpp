@@ -1,4 +1,5 @@
 #include "EventManager.h"
+#include "Directory.h"
 
 using namespace std;
 
@@ -14,15 +15,18 @@ EventManager::~EventManager()
 	eventThread.join();
 }
 
-bool FunctionComparator::operator()(const EventHandler& a, const EventHandler& b) const
+bool FunctionComparator::operator()(const pair<string,EventHandler>& a, const pair<string,EventHandler>& b) const
 {
-  return a.target<void(string,Json::Value)>() < b.target<void(string,Json::Value)>();
+  auto aptr = a.second.target<void(string,Json::Value)>();
+  auto bptr = b.second.target<void(string,Json::Value)>();
+
+  return (aptr < bptr) || (aptr == bptr && a.first < b.first);
 }
 
-void EventManager::subscribe(string uri, EventHandler handler)
+void EventManager::subscribe(string client, string uri, EventHandler handler)
 {
     	unique_lock<mutex> l(subscriptionsLock);
-	subscriptions[uri].insert(handler);
+	subscriptions[uri].insert(make_pair(client,handler));
 }
 
 EventManager& EventManager::getInstance()
@@ -31,17 +35,51 @@ EventManager& EventManager::getInstance()
 	return eventManager;
 }
 	
-void EventManager::publish(std::string uri, Json::Value payload)
+void EventManager::publish(std::string uri, Json::Value payload, std::string excluded)
 {
     	unique_lock<mutex> l(subscriptionsLock);
 	auto ehSet = subscriptions.find(uri);
+
+  // create values vector
+  vector<Json::Value> values;
+  if(payload.isArray())
+  {
+    values.resize(payload.size());
+    for(unsigned int i = 0; i < payload.size(); i++)
+    {
+      values[i] = payload[i];
+    }
+  }
+  else
+  {
+    values.push_back(payload);
+  }
+
+  // execute associated rpcs
+if(excluded != WAMP_SERVER)
+{
+  auto range = Directory::getInstance().equal_range(uri);
+  for(auto it = range.first; it != range.second; it++)
+  {
+    RemoteProcedure& rp = it->second;
+    if(rp)
+    {
+      // TODO what if values does not match??
+      // TODO future!!
+      rp(values);
+    }
+  }
+}
 
 	// has someone subscribed to this event?
 	if(ehSet != subscriptions.end())
 	{
 		for(auto eh : (*ehSet).second)
 		{
-			eh(uri,payload);
+			if(eh.first != excluded)
+			{
+				eh.second(eh.first,uri,payload);
+			}
 		}
 	}
 }
@@ -67,7 +105,7 @@ void EventManager::eventLoop()
 
 			string uri = topic->getURI();
 			Json::Value payload = topic->getPayload();
-			publish(uri,payload);
+			publish(uri,payload,WAMP_SERVER);
 			l.lock();
 		}
 

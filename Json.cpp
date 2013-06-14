@@ -1,9 +1,9 @@
 #include "Json.h"
 
 template<>
-float convertJson<float>(Json::Value& val)
+double convertJson<double>(Json::Value& val)
 {
-	return val.asFloat();
+	return val.asDouble();
 }
 
 template<>

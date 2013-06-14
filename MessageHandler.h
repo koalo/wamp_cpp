@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <functional>
+#include <memory>
 
 #include "Json.h"
 
@@ -22,13 +23,13 @@ public:
 	EVENT
   };
 
-  void sendCallResult(std::string callID, Json::Value result);
-  void handleCall(std::string callID, std::string uri, std::vector<Json::Value> values);
-  void sendEvent(std::string uri, Json::Value payload);
-  void subscribe(std::string uri);
-  void receiveMessage(std::string msg);
-  void registerSend(std::function<void(std::string)> send);
+  void sendCallResult(std::string client, std::string callID, Json::Value result);
+  void handleCall(std::string client, std::string callID, std::string uri, std::vector<Json::Value> values);
+  void sendEvent(std::string client, std::string uri, Json::Value payload);
+  void subscribe(std::string client, std::string uri);
+  void receiveMessage(std::string client, std::string msg);
+  void registerSend(std::function<void(std::string,std::string)> send);
 
-  std::function<void(std::string)> sendFun;
+  std::function<void(std::string,std::string)> sendFun;
 };
 #endif

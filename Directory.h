@@ -14,11 +14,17 @@ public:
   static Directory& getInstance();
 
 	void insert(std::string uri, RemoteProcedure rp);
-	RemoteProcedure get(std::string uri);
+	std::pair< std::multimap<std::string,RemoteProcedure>::iterator,
+	       std::multimap<std::string,RemoteProcedure>::iterator> equal_range(std::string uri);
+
+	// TODO maybe find a better place for this
+	void addConnectionHandler(std::function<void(std::string)> handler);
+	void connectionEstablished(std::string client);
 	
 private:
 	Directory();
-	std::map<std::string, RemoteProcedure> directory;
+	std::multimap<std::string, RemoteProcedure> directory;
+	std::vector<std::function<void(std::string)>> connectionHandlers;
 };
 
 #endif
