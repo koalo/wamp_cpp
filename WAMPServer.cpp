@@ -125,7 +125,7 @@ void WAMPServer::thread()
 		wserver.set_close_handler(bind(&WAMPServer::on_close,this,::_1));
 
 		// Listen on port 9002
-		wserver.listen(9002);
+		wserver.listen(boost::asio::ip::tcp::v4(), 9002);
 
 		// Start the server accept loop
 		wserver.start_accept();
@@ -133,11 +133,11 @@ void WAMPServer::thread()
 		// Start the ASIO io_service run loop
 		wserver.run();
 	} catch (const std::exception & e) {
-		std::cout << e.what() << std::endl;
+		std::cerr << "WAMPServer error " << e.what() << std::endl;
 	} catch (websocketpp::lib::error_code e) {
-		std::cout << e.message() << std::endl;
+		std::cerr << "WAMPServer error " << e.message() << std::endl;
 	} catch (...) {
-		std::cout << "other exception" << std::endl;
+		std::cerr << "WAMPServer error unknown exception" << std::endl;
 	}
 }
 
