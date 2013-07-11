@@ -19,81 +19,64 @@ struct gen_seq : gen_seq<N - 1, N - 1, Is...> { };
 template<int... Is>
 struct gen_seq<0, Is...> : seq<Is...> { };
 
-
-/*
-template<class T>
-T popArg(std::vector<Json::Value>& vals)
+template< class C, typename R, class... Args, int... Is>
+//void callByVector(C* self, std::function<void(Args...)> f,
+R callByVector(C* self, R (C::*f)(), std::vector<Json::Value>& arguments, seq<Is...>)
 {
-  Json::Value val = vals.back();
-  vals.pop_back();
-  return convertJson<T>(val);
+	return (self->*f)(convertJson<Args...>(arguments[Is])...);
+	//f(self,convertJson<Args...>(arguments[Is])...);
 }
 
-	template<class C, class E, class... Args>
-	std::function<void(C)> gg(std::function<void(C,E,Args...)> f, std::vector<Json::Value>& vals)
-	{
-		return [f] (std::vector<Json::Value> vals) 
-		{ 
-  			Json::Value val = vals.back();
-  			vals.pop_back();
-			
-			auto g = gg(f,vals);
-			g((C)this);
-			return Json::Value();
-		}
-	}
-
-
-template<>
-std::function<void()> gg(std::function<void()> f, std::vector<Json::Value>& vals)
+template< class C, typename R, class... Args>
+//void callByVector(C* self, std::function<void(Args...)> f, std::vector<Json::Value>& arguments)
+R callByVector(C* self, R (C::*f)(), std::vector<Json::Value>& arguments)
 {
-  return f;
+	return callByVector(self, f, arguments, gen_seq<sizeof...(Args)>());
 }
-*/
 
-	template< class C, class... Args, int... Is>
-	void callByVector(std::function<void(Args...)> f,
-		C self, std::vector<Json::Value>& arguments, seq<Is...>)
-	{
-  		f(self,convertJson<Args...>(arguments[Is])...);
-	}
 
-	template< class C, class... Args>
-	void callByVector(std::function<void(Args...)> f, C self, std::vector<Json::Value>& arguments)
-	{
-  		callByVector(f, arguments, gen_seq<sizeof...(Args)>());
-	}
 
-//	template<class... Args>
-	//std::function<Json::Value(std::vector<Json::Value>)> getJsonLambda(std::function<void(Args...)> f)
+template< class C, typename R >
+std::function<Json::Value(std::vector<Json::Value>)> getJsonLambda(C* self, R (C::*f)(),
+		typename std::enable_if<!std::is_void<R>::value >::type* = 0)
+{
+	auto fun = [f,self] (std::vector<Json::Value> vals) 
+	{ 
+		return Json::Value((self->*f)());
+	};
+}
 
-	template< class C, typename R >
-	std::function<Json::Value(std::vector<Json::Value>)> getJsonLambda(C* self, R (C::*f)(),
-			typename std::enable_if<!std::is_void<R>::value >::type* = 0)
-	{
-		auto fun = [f,self] (std::vector<Json::Value> vals) 
-		{ 
-			return Json::Value((self->*f)());
-		};
-	}
+template< class C, typename R >
+std::function<Json::Value(std::vector<Json::Value>)> getJsonLambda(C* self, R (C::*f)(), 
+		typename std::enable_if<std::is_void<R>::value >::type* = 0)
+{
+	auto fun = [f,self] (std::vector<Json::Value> vals) 
+	{ 
+		(self->*f)();
+		return Json::Value();
+	};
+}
 
-	template< class C, typename R >
-	std::function<Json::Value(std::vector<Json::Value>)> getJsonLambda(C* self, R (C::*f)(), 
-			typename std::enable_if<std::is_void<R>::value >::type* = 0)
-	{
-		auto fun = [f,self] (std::vector<Json::Value> vals) 
-		{ 
-			(self->*f)();
-			return Json::Value();
-		};
-/*
-		return [f,this] (std::vector<Json::Value> vals) 
-		{ 
-			callByVector(f,this,vals);
-			return Json::Value();
-		};
-*/
-	}
+template< class C, typename R, typename... Args >
+std::function<Json::Value(std::vector<Json::Value>)> getJsonLambda(C* self, R (C::*f)(Args...),
+		typename std::enable_if<!std::is_void<R>::value >::type* = 0)
+{
+	auto fun = [f,self] (std::vector<Json::Value> vals) 
+	{ 
+		return Json::Value(callByVector(self,f,vals));
+	};
+}
+
+template< class C, typename R, typename... Args >
+std::function<Json::Value(std::vector<Json::Value>)> getJsonLambda(C* self, R (C::*f)(Args...), 
+		typename std::enable_if<std::is_void<R>::value >::type* = 0)
+{
+	auto fun = [f,self] (std::vector<Json::Value> vals) 
+	{ 
+		callByVector(self,f,vals);
+		return Json::Value();
+	};
+}
 
 template<class C>
 class RPCallable
