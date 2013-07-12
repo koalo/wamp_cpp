@@ -40,7 +40,7 @@ template< class C, typename R >
 std::function<Json::Value(std::vector<Json::Value>)> getJsonLambda(C* self, R (C::*f)(),
 		typename std::enable_if<!std::is_void<R>::value >::type* = 0)
 {
-	auto fun = [f,self] (std::vector<Json::Value> vals) 
+	return [f,self] (std::vector<Json::Value> vals) -> Json::Value
 	{ 
 		return Json::Value((self->*f)());
 	};
@@ -50,7 +50,7 @@ template< class C, typename R >
 std::function<Json::Value(std::vector<Json::Value>)> getJsonLambda(C* self, R (C::*f)(), 
 		typename std::enable_if<std::is_void<R>::value >::type* = 0)
 {
-	auto fun = [f,self] (std::vector<Json::Value> vals) 
+	return [f,self] (std::vector<Json::Value> vals) -> Json::Value
 	{ 
 		(self->*f)();
 		return Json::Value();
@@ -61,7 +61,7 @@ template< class C, typename R, typename... Args >
 std::function<Json::Value(std::vector<Json::Value>)> getJsonLambda(C* self, R (C::*f)(Args...),
 		typename std::enable_if<!std::is_void<R>::value >::type* = 0)
 {
-	auto fun = [f,self] (std::vector<Json::Value> vals) 
+	return [f,self] (std::vector<Json::Value> vals) -> Json::Value
 	{ 
 		return Json::Value(callByVector(self,f,vals));
 	};
@@ -71,7 +71,7 @@ template< class C, typename R, typename... Args >
 std::function<Json::Value(std::vector<Json::Value>)> getJsonLambda(C* self, R (C::*f)(Args...), 
 		typename std::enable_if<std::is_void<R>::value >::type* = 0)
 {
-	auto fun = [f,self] (std::vector<Json::Value> vals) 
+	return [f,self] (std::vector<Json::Value> vals) -> Json::Value
 	{ 
 		callByVector(self,f,vals);
 		return Json::Value();
