@@ -24,7 +24,7 @@ void WAMPServer::on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
 bool WAMPServer::validate(connection_hdl hdl) {
 	server::connection_ptr con = wserver.get_con_from_hdl(hdl);
 
-	std::cout << "Cache-Control: " << con->get_request_header("Cache-Control") << std::endl;
+	//std::cout << "Cache-Control: " << con->get_request_header("Cache-Control") << std::endl;
 
 	const std::vector<std::string> & subp_requests = con->get_requested_subprotocols();
 	std::vector<std::string>::const_iterator it;
