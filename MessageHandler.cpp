@@ -83,49 +83,56 @@ void MessageHandler::receiveMessage(std::string client, std::string msg)
 	
 	vector<Json::Value> values;
 
-	switch(root[(unsigned int)0].asInt())
+	try
 	{
-	case CALL:
-		if(root.size() < 3)
+		switch(root[(unsigned int)0].asInt())
 		{
-		  cerr << "Too few elements in message for CALL" << endl;
-		}
+		case CALL:
+			if(root.size() < 3)
+			{
+			  cerr << "Too few elements in message for CALL" << endl;
+			}
 
-		for(unsigned int i = 3; i < root.size(); i++)
-		{
-			values.push_back(root[i]);
-		}
+			for(unsigned int i = 3; i < root.size(); i++)
+			{
+				values.push_back(root[i]);
+			}
 
-		handleCall(client,root[1].asString(),root[2].asString(),values);
-		break;
-
-	case SUBSCRIBE:
-		if(root.size() < 2)
-		{
-		  cerr << "Too few elements in message for SUBSCRIBE" << endl;
-		}
-		
-		subscribe(client, root[1].asString());
-		break;
-
-	case PUBLISH:
-		switch(root.size())
-		{
-		case 3:
-			EventManager::getInstance().publish(root[1].asString(),root[2],"");
+			handleCall(client,root[1].asString(),root[2].asString(),values);
 			break;
-		case 4:
-		case 5:
-			EventManager::getInstance().publish(root[1].asString(),root[2],root[3].asBool()?client:"");
-			break;
-		default:
-		  	cerr << "Wrong format for PUBLISH" << endl;
+
+		case SUBSCRIBE:
+			if(root.size() < 2)
+			{
+			  cerr << "Too few elements in message for SUBSCRIBE" << endl;
+			}
 			
-		};
-		break;
+			subscribe(client, root[1].asString());
+			break;
 
-	default:
-		cerr << "Message type " << root[(unsigned int)0].asInt() << "  not implemented"  << endl;
+		case PUBLISH:
+			switch(root.size())
+			{
+			case 3:
+				EventManager::getInstance().publish(root[1].asString(),root[2],"");
+				break;
+			case 4:
+			case 5:
+				EventManager::getInstance().publish(root[1].asString(),root[2],root[3].asBool()?client:"");
+				break;
+			default:
+				cerr << "Wrong format for PUBLISH" << endl;
+				
+			};
+			break;
+
+		default:
+			cerr << "Message type " << root[(unsigned int)0].asInt() << "  not implemented"  << endl;
+		}
+	}
+	catch(const runtime_error& e)
+	{
+		cerr << "Message '" << msg << "' could not be processed: " << e.what() << endl;
 	}
 }
 

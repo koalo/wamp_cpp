@@ -14,6 +14,8 @@
 
 #include <iostream>
 
+#include <boost/filesystem.hpp>
+
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
@@ -29,19 +31,25 @@ public:
 	//typedef std::set<connection_hdl,std::owner_less<connection_hdl>> con_list;
 	typedef std::set<connection_hdl> con_list;
 
+	WAMPServer();
+
 	// Define a callback to handle incoming messages
 	void on_message(websocketpp::connection_hdl hdl, message_ptr msg);
 	bool validate(connection_hdl hdl);
 	void on_open(connection_hdl hdl);
+	void on_http(connection_hdl hdl);
 	void on_close(connection_hdl hdl);
 	void send(std::string client, std::string msg);
 	void start();
 	void stop();
+	void setBaseDir(std::string dir);
 
 private:
 	void thread();
 	static std::string generateRandomString();
 	std::thread serverThread;
+
+	boost::filesystem::path basedir;
 
 	server wserver;
 	con_list connections;

@@ -3,12 +3,18 @@
 #include <iostream>
 #include <sstream>
 #include <random>
+#include <fstream>
 
 #include "WAMPServer.h"
 
 #include "Directory.h"
 
 using namespace std;
+using namespace boost::filesystem;
+
+WAMPServer::WAMPServer()
+: basedir("") {
+}
 
 void WAMPServer::on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
 	handler.receiveMessage(clients.right.at(hdl),msg->get_payload());
@@ -20,6 +26,79 @@ void WAMPServer::on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
 			<< "(" << e.message() << ")" << std::endl;
 	}
 }
+
+void WAMPServer::on_http(websocketpp::connection_hdl hdl) {
+    	server::connection_ptr con = wserver.get_con_from_hdl(hdl);
+
+	try {
+		path request;
+
+		if(basedir == "")
+		{
+			throw 0;
+		}
+
+		request = canonical(basedir.string()+con->get_resource()); //will throw exception if file not exists!
+
+		if (request.string().compare(0, basedir.string().length(), basedir.string()) != 0)
+		{
+			throw 0;
+		}
+
+		if(!is_regular_file(request))
+		{
+			if(is_directory(request))
+			{
+				request += "/index.html";
+			}
+		}
+
+		cout << request << endl;
+		
+		ifstream t(request.string());
+		if(!t.is_open())
+		{
+			throw 0;
+		}
+
+		con->set_status(websocketpp::http::status_code::ok);
+
+		std::string str;
+
+		t.seekg(0, std::ios::end);   
+		str.reserve(t.tellg());
+		t.seekg(0, std::ios::beg);
+
+		str.assign((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+
+		con->set_body(str);
+
+		string mime = "text/plain";
+		string extension = request.extension().string();
+		if(extension == ".htm" || extension == ".html") {
+			mime = "text/html";
+		}
+		else if(extension == ".svg") {
+			mime = "image/svg+xml";
+		}
+		else if(extension == ".js") {
+			mime = "application/javascript";
+		}
+
+		con->replace_header("Content-Type",mime);
+
+		t.close();
+	}
+	catch(...){
+		con->set_body("Request could not be handled");
+    		con->set_status(websocketpp::http::status_code::not_found);
+	}
+}
+
+void WAMPServer::setBaseDir(std::string dir) {
+    basedir = canonical(dir); //will throw exception if file not exists!
+}
+
 
 bool WAMPServer::validate(connection_hdl hdl) {
 	server::connection_ptr con = wserver.get_con_from_hdl(hdl);
@@ -123,6 +202,7 @@ void WAMPServer::thread()
 		wserver.set_validate_handler(bind(&WAMPServer::validate,this,::_1));
 		wserver.set_open_handler(bind(&WAMPServer::on_open,this,::_1));
 		wserver.set_close_handler(bind(&WAMPServer::on_close,this,::_1));
+		wserver.set_http_handler(bind(&WAMPServer::on_http,this,::_1));
 
 		// Listen on port 9002
 		wserver.listen(boost::asio::ip::tcp::v4(), 9002);

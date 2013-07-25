@@ -16,9 +16,8 @@ ifeq ($(TARGET),arm)
   _ARCH = armv6l
 endif
 
-#LDLIBS+=-lboost_system
-#BOOSTROOT=../boost/_$(_ARCH)
-BOOSTROOT=../boost
+LDLIBS+=-lboost_system -lboost_filesystem
+BOOSTROOT=../boost/_$(_ARCH)
 WEBSOCKETPPROOT=../websocketpp
 CXXFLAGS+=-g
 
@@ -26,14 +25,17 @@ LIBTARGET=_$(_ARCH)/libwamp_cpp.a
 
 LIBOBJTARGET=$(patsubst %,_$(_ARCH)/%, $(LIBOBJ))
 
-CXXFLAGS+=-std=c++0x -I$(WEBSOCKETPPROOT) -I$(BOOSTROOT) -Ijsoncpp/ -I. 
+CXXFLAGS+=-std=c++0x -I$(WEBSOCKETPPROOT) -I$(BOOSTROOT)/include/ -Ijsoncpp/ -I.
 #-D_WEBSOCKETPP_CPP11_SYSTEM_ERROR_ -D_WEBSOCKETPP_CPP11_THREAD_
 # -D_WEBSOCKETPP_CPP11_STL_
+LDFLAGS+=-static
 
 .SECONDEXPANSION:
 
 $(LIBTARGET): $(LIBOBJTARGET) | $${@D}
-	ar rcs $(LIBTARGET) $(LIBOBJTARGET) 
+	cd _$(_ARCH) && ar x ../$(BOOSTROOT)/lib/libboost_filesystem.a
+	cd _$(_ARCH) && ar x ../$(BOOSTROOT)/lib/libboost_system.a
+	cd _$(_ARCH) && ar rcs ../$(LIBTARGET) *.o
 	ranlib $(LIBTARGET)
 
 main: main.o Example.o $(LIBOBJTARGET)
