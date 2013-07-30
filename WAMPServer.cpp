@@ -18,13 +18,15 @@ WAMPServer::WAMPServer()
 
 void WAMPServer::on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
 	handler.receiveMessage(clients.right.at(hdl),msg->get_payload());
-
+//	cout << "Message received " << msg->get_payload() << endl;
+/*
 	try {
 		wserver.send(hdl, msg->get_payload(), msg->get_opcode());
 	} catch (const websocketpp::lib::error_code& e) {
 		std::cout << " failed because: " << e  
 			<< "(" << e.message() << ")" << std::endl;
 	}
+*/
 }
 
 void WAMPServer::on_http(websocketpp::connection_hdl hdl) {
@@ -156,6 +158,7 @@ void WAMPServer::on_close(connection_hdl hdl) {
 
 void WAMPServer::send(std::string client, std::string msg)
 {
+	//cout << "Send message " << msg << endl;
 	try {
 		auto hdl = clients.left.at(client);
 		if(!hdl.lock().get())

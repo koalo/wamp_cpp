@@ -13,6 +13,12 @@ int convertJson<int>(Json::Value& val)
 }
 
 template<>
+unsigned int convertJson<unsigned int>(Json::Value& val)
+{
+	return val.asUInt();
+}
+
+template<>
 std::string convertJson<std::string>(Json::Value& val)
 {
 	return val.asString();
