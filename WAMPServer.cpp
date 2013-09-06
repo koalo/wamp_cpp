@@ -18,7 +18,7 @@ WAMPServer::WAMPServer()
 
 void WAMPServer::on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
 	handler.receiveMessage(clients.right.at(hdl),msg->get_payload());
-//	cout << "Message received " << msg->get_payload() << endl;
+	//cout << "Message received " << msg->get_payload() << endl;
 /*
 	try {
 		wserver.send(hdl, msg->get_payload(), msg->get_opcode());
@@ -207,7 +207,7 @@ void WAMPServer::thread()
 		wserver.set_close_handler(bind(&WAMPServer::on_close,this,::_1));
 		wserver.set_http_handler(bind(&WAMPServer::on_http,this,::_1));
 
-		// Listen on port 9002
+		// Listen on port
 		wserver.listen(boost::asio::ip::tcp::v4(), 9002);
 
 		// Start the server accept loop

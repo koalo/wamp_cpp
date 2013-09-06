@@ -118,6 +118,7 @@ void MessageHandler::receiveMessage(std::string client, std::string msg)
 				break;
 			case 4:
 			case 5:
+				cout << root[1].asString() << " " << root[3].asBool() << endl;
 				EventManager::getInstance().publish(root[1].asString(),root[2],root[3].asBool()?client:"");
 				break;
 			default:

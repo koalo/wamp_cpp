@@ -37,39 +37,39 @@ EventManager& EventManager::getInstance()
 	
 void EventManager::publish(std::string uri, Json::Value payload, std::string excluded)
 {
-    	unique_lock<mutex> l(subscriptionsLock);
+	unique_lock<mutex> l(subscriptionsLock);
 	auto ehSet = subscriptions.find(uri);
 
-  // create values vector
-  vector<Json::Value> values;
-  if(payload.isArray())
-  {
-    values.resize(payload.size());
-    for(unsigned int i = 0; i < payload.size(); i++)
-    {
-      values[i] = payload[i];
-    }
-  }
-  else
-  {
-    values.push_back(payload);
-  }
+	// create values vector
+	vector<Json::Value> values;
+	if(payload.isArray())
+	{
+		values.resize(payload.size());
+		for(unsigned int i = 0; i < payload.size(); i++)
+		{
+			values[i] = payload[i];
+		}
+	}
+	else
+	{
+		values.push_back(payload);
+	}
 
-  // execute associated rpcs
-if(excluded != WAMP_SERVER)
-{
-  auto range = Directory::getInstance().equal_range(uri);
-  for(auto it = range.first; it != range.second; it++)
-  {
-    RemoteProcedure& rp = it->second;
-    if(rp)
-    {
-      // TODO what if values does not match??
-      // TODO future!!
-      rp(values);
-    }
-  }
-}
+	// execute associated rpcs
+	if(excluded != WAMP_SERVER)
+	{
+		auto range = Directory::getInstance().equal_range(uri);
+		for(auto it = range.first; it != range.second; it++)
+		{
+			RemoteProcedure& rp = it->second;
+			if(rp)
+			{
+				// TODO what if values does not match??
+				// TODO future!!
+				rp(values);
+			}
+		}
+	}
 
 	// has someone subscribed to this event?
 	if(ehSet != subscriptions.end())
