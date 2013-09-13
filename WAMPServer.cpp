@@ -13,12 +13,15 @@ using namespace std;
 using namespace boost::filesystem;
 
 WAMPServer::WAMPServer()
-: basedir("") {
+: basedir(""), debug(false) {
 }
 
 void WAMPServer::on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
+	if(debug) {
+		cout << "Message received " << msg->get_payload() << endl;
+	}
+
 	handler.receiveMessage(clients.right.at(hdl),msg->get_payload());
-	//cout << "Message received " << msg->get_payload() << endl;
 /*
 	try {
 		wserver.send(hdl, msg->get_payload(), msg->get_opcode());
@@ -27,6 +30,10 @@ void WAMPServer::on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
 			<< "(" << e.message() << ")" << std::endl;
 	}
 */
+}
+
+void WAMPServer::setDebug(bool enable) {
+	debug = enable;
 }
 
 void WAMPServer::on_http(websocketpp::connection_hdl hdl) {
@@ -158,7 +165,10 @@ void WAMPServer::on_close(connection_hdl hdl) {
 
 void WAMPServer::send(std::string client, std::string msg)
 {
-	//cout << "Send message " << msg << endl;
+	if(debug) {
+		cout << "Send message " << msg << endl;
+	}
+
 	try {
 		auto hdl = clients.left.at(client);
 		if(!hdl.lock().get())

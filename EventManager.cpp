@@ -37,9 +37,6 @@ EventManager& EventManager::getInstance()
 	
 void EventManager::publish(std::string uri, Json::Value payload, std::string excluded)
 {
-	unique_lock<mutex> l(subscriptionsLock);
-	auto ehSet = subscriptions.find(uri);
-
 	// create values vector
 	vector<Json::Value> values;
 	if(payload.isArray())
@@ -70,6 +67,9 @@ void EventManager::publish(std::string uri, Json::Value payload, std::string exc
 			}
 		}
 	}
+
+	unique_lock<mutex> l(subscriptionsLock);
+	auto ehSet = subscriptions.find(uri);
 
 	// has someone subscribed to this event?
 	if(ehSet != subscriptions.end())

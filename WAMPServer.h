@@ -43,6 +43,7 @@ public:
 	void start();
 	void stop();
 	void setBaseDir(std::string dir);
+	void setDebug(bool enable);
 
 private:
 	void thread();
@@ -55,6 +56,7 @@ private:
 	con_list connections;
 	MessageHandler handler;
 	boost::bimap<std::string, connection_hdl> clients;
+	bool debug;
 };
 
 #endif
