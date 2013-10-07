@@ -22,14 +22,6 @@ void WAMPServer::on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
 	}
 
 	handler.receiveMessage(clients.right.at(hdl),msg->get_payload());
-/*
-	try {
-		wserver.send(hdl, msg->get_payload(), msg->get_opcode());
-	} catch (const websocketpp::lib::error_code& e) {
-		std::cout << " failed because: " << e  
-			<< "(" << e.message() << ")" << std::endl;
-	}
-*/
 }
 
 void WAMPServer::setDebug(bool enable) {
@@ -47,7 +39,9 @@ void WAMPServer::on_http(websocketpp::connection_hdl hdl) {
 			throw 0;
 		}
 
-		request = canonical(basedir.string()+con->get_resource()); //will throw exception if file not exists!
+		string resource = con->get_resource();
+		size_t found = resource.find_first_of("?#");
+		request = canonical(basedir.string()+resource.substr(0,found)); //will throw exception if file not exists!
 
 		if (request.string().compare(0, basedir.string().length(), basedir.string()) != 0)
 		{
