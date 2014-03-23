@@ -1,0 +1,8 @@
+# - Config file for the wamp_cpp package
+# It defines the following variables
+# WAMP_CPP_FOUND - indicates that the module was found
+# WAMP_CPP_INCLUDE_DIR - include directories
+
+set(WAMP_CPP_FOUND TRUE)
+set(WAMP_CPP_INCLUDE_DIR "@INSTALL_INCLUDE_DIR@")
+

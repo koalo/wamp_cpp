@@ -219,6 +219,8 @@ void WAMPServer::thread()
 
 		// Start the ASIO io_service run loop
 		wserver.run();
+
+		std::cout << "WAMPServer stopped" << std::endl;
 	} catch (const std::exception & e) {
 		std::cerr << "WAMPServer error " << e.what() << std::endl;
 	} catch (websocketpp::lib::error_code e) {

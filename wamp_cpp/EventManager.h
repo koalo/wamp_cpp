@@ -27,10 +27,10 @@ public:
 	void subscribe(std::string client, std::string uri, EventHandler handler);
 	static EventManager& getInstance();
 
-	void publish(std::string uri, Json::Value payload, std::string exclude);
+	void publish(std::string uri, Json::Value payload, std::string exclude = "");
 
 	template<typename T>
-	void publish(std::string uri, T payload, std::string exclude)
+	void publish(std::string uri, T payload, std::string exclude = "")
 	{
 		publish(uri,Json::Value(payload),exclude);	
 	}

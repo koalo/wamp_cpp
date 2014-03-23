@@ -2,16 +2,18 @@
 #include <thread>
 #include "Topic.h"
 
-class Example : public RPCallable
+class DemoServer : public RPCallable<DemoServer>
 {
 public:
-  Example();
-  ~Example();
+  DemoServer();
+  ~DemoServer();
   int adding(int a, int b);
+  void handleEvent1(int a);
 
 private:
   void eventLoop();
   std::thread eventThread;
+  bool running;
 
   Topic<int> topic;
 };

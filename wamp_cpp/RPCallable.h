@@ -23,7 +23,6 @@ template< class C, typename R, class... Args, int... Is>
 R callByVector(C* self, R (C::*f)(Args...), std::vector<Json::Value>& arguments, seq<Is...>)
 {
 	return (self->*f)(convertJson<Args>(arguments[Is])...);
-	//f(self,convertJson<Args...>(arguments[Is])...);
 }
 
 template< class C, typename R, class... Args>
@@ -31,8 +30,6 @@ R callByVector(C* self, R (C::*f)(Args...), std::vector<Json::Value>& arguments)
 {
 	return callByVector(self, f, arguments, gen_seq<sizeof...(Args)>());
 }
-
-
 
 template< class C, typename R >
 std::function<Json::Value(std::vector<Json::Value>)> getJsonLambda(C* self, R (C::*f)(),
